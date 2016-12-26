@@ -29,6 +29,7 @@ public class FeedbackDemoUIController : MonoBehaviour {
         Debug.Log("OnClickUploadFeedback");
         recordFeedback.enabled = true;
         uploadFeedback.enabled = false;
+        vrTheFeedbackManager.SaveFeedback();
     }
 
 }
