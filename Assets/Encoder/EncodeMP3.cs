@@ -22,24 +22,21 @@ public static class EncodeMP3
 {
 
 
-	public static void convert (AudioClip clip, string path, int bitRate)
+	public static void convert (float[] samples, string path, int bitRate)
 	{
 
 		if (!path.EndsWith (".mp3"))
 			path = path + ".mp3";
 		
-		ConvertAndWrite (clip, path, bitRate);
+		ConvertAndWrite (samples, path, bitRate);
 
 	}
 
 
 	//  derived from Gregorio Zanon's script
-	private static void ConvertAndWrite (AudioClip clip, string path, int bitRate)
+	private static void ConvertAndWrite (float[] samples, string path, int bitRate)
 	{
-		var samples = new float[clip.samples * clip.channels];
-
-		clip.GetData (samples, 0);
-
+		
 		Int16[] intData = new Int16[samples.Length];
 		//converting in 2 float[] steps to Int16[], //then Int16[] to Byte[]
 

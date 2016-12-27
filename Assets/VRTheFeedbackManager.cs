@@ -21,6 +21,8 @@ public class VRTheFeedbackManager : MonoBehaviour {
 	Thread _thread;
 	PresignedResponseJSON json;
 	private SavWav saveWav;
+	private float[] justFeedbackSamples;
+	public AudioClip justFeedback;
 
 	void Start () {
         myAudio = GetComponent<AudioSource>();
@@ -29,19 +31,16 @@ public class VRTheFeedbackManager : MonoBehaviour {
 	
     public void RecordFeedback()
     {
-        myAudio.clip = Microphone.Start(null, false, 600, 44100);
+        myAudio.clip = Microphone.Start(null, false, 300, 44100);
     }
 
     public void SaveFeedback()
     {
-
+		Microphone.End (null);
 		filePath = Path.Combine (Application.persistentDataPath, "test.mp3");
-		AudioClip justFeedback = saveWav.TrimSilence (myAudio.clip, 0.01f);
-
-		EncodeMP3.convert(justFeedback, filePath, 128);
+		justFeedback = saveWav.TrimSilence (myAudio.clip, 0.01f);
 
 		if (filePath != null) {
-			Debug.Log ("Will upload from: " + filePath);
 			StartCoroutine(UploadToServer ());
 		}	
     }
@@ -54,6 +53,8 @@ public class VRTheFeedbackManager : MonoBehaviour {
 		{
 			Debug.Log ("Server response on presign: " + www.data);
 			json = ParsePresignedResponseJSON(www.data);
+			justFeedbackSamples = new float[justFeedback.samples * justFeedback.channels];
+			justFeedback.GetData (justFeedbackSamples, 0);
 			_thread = new Thread(FeedbackUploadThread);
 			_thread.Start();	
 		}
@@ -67,7 +68,10 @@ public class VRTheFeedbackManager : MonoBehaviour {
 	public void FeedbackUploadThread() {
 		_threadRunning = true;
 		Debug.Log("Starting upload on separate thread.");
+		EncodeMP3.convert(justFeedbackSamples, filePath, 128);
 		UploadObject (json.url, filePath);
+		justFeedbackSamples = null;
+		justFeedback = null;
 		Debug.Log("Upload done..");
 		_threadRunning = false;
 	}
