@@ -15,6 +15,18 @@ public class PresignedResponseJSON
 
 public class VRTheFeedbackManager : MonoBehaviour {
 
+    public struct VRTheFeedbackEventArgs
+    {
+        
+    }
+
+    /// <summary>
+    /// Event Payload
+    /// </summary>
+    /// <param name="sender">this object</param>
+    /// <param name="e"><see cref="InteractableObjectEventArgs"/></param>
+    public delegate void VRTheFeedbackEventArgsEventHandler(object sender, VRTheFeedbackEventArgs e);
+
     private AudioSource myAudio;
 
 	string fileName;
@@ -25,6 +37,40 @@ public class VRTheFeedbackManager : MonoBehaviour {
 	private SavWav saveWav;
 	private float[] justFeedbackSamples;
 	public AudioClip justFeedback;
+    private bool _threadSuccessfulNotificationPending = false;
+    private bool _threadErrorNotificationPending = false;
+
+    public event VRTheFeedbackEventArgsEventHandler FeedbackSuccessfullyUploaded;
+    public event VRTheFeedbackEventArgsEventHandler FeedbackFailedDueToError;
+
+    public virtual void OnFeedbackSuccessfullyUploaded(VRTheFeedbackEventArgs e)
+    {
+        if (FeedbackSuccessfullyUploaded != null)
+        {
+            FeedbackSuccessfullyUploaded(this, e);
+        }
+    }
+
+    public virtual void OnFeedbackFailedDueToError(VRTheFeedbackEventArgs e)
+    {
+        if (FeedbackFailedDueToError != null)
+        {
+            FeedbackFailedDueToError(this, e);
+        }
+    }
+
+    public void Update()
+    {
+        if (_threadSuccessfulNotificationPending)
+        {
+            _threadSuccessfulNotificationPending = false;
+            OnFeedbackSuccessfullyUploaded(new VRTheFeedbackEventArgs());
+        } else if (_threadErrorNotificationPending)
+        {
+            OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs());
+            _threadErrorNotificationPending = false;
+        }
+    }
 
     public bool MyRemoteCertificateValidationCallback(System.Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
     {
@@ -102,6 +148,7 @@ public class VRTheFeedbackManager : MonoBehaviour {
 		else
 		{
 			Debug.Log("ERROR: " + www.error);
+            OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs());
 		}  
 
 	}
@@ -115,7 +162,8 @@ public class VRTheFeedbackManager : MonoBehaviour {
 		justFeedbackSamples = null;
 		justFeedback = null;
 		Debug.Log("Upload done..");
-		_threadRunning = false;
+        _threadSuccessfulNotificationPending = true;
+        _threadRunning = false;
 	}
 
 	private PresignedResponseJSON ParsePresignedResponseJSON(string jsonString)
@@ -127,7 +175,7 @@ public class VRTheFeedbackManager : MonoBehaviour {
 		return parsejson;
 	}
 
-	static void UploadObject(string url, string filePath)
+	private void UploadObject(string url, string filePath)
 	{
         try {
         HttpWebRequest httpRequest = WebRequest.Create(url) as HttpWebRequest;
@@ -149,6 +197,7 @@ public class VRTheFeedbackManager : MonoBehaviour {
         Debug.Log("Response from server: " + response.StatusCode);
         } catch (System.Exception ex)
         {
+            _threadErrorNotificationPending = true;
             Debug.LogError("something went wrong.. " + ex);
         }
     }
