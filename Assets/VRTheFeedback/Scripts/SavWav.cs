@@ -17,7 +17,7 @@ public class SavWav
 
     }
 
-    public bool Save(string filename, AudioClip clip)
+    public string Save(string filename, AudioClip clip)
     {
         if (!filename.ToLower().EndsWith(".wav"))
         {
@@ -44,7 +44,7 @@ public class SavWav
             WriteHeader(fileStream, clip);
         }
 
-        return true; // TODO: return false if there's a failure saving the file
+		return filepath; // TODO: return false if there's a failure saving the file
     }
 
     public AudioClip TrimSilence(AudioClip clip, float min)
