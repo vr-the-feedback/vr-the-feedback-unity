@@ -29,15 +29,17 @@ public class VRTheFeedbackManager : MonoBehaviour {
 	
     public void RecordFeedback()
     {
-        myAudio.clip = Microphone.Start(null, false, 180, 44100);
+        myAudio.clip = Microphone.Start(null, false, 600, 44100);
     }
 
     public void SaveFeedback()
     {
 
-		filePath = Path.Combine (Application.persistentDataPath, "test.wav");
-		AudioClip justFeedback = saveWav.TrimSilence (myAudio.clip, 0.1f);
-		filePath = saveWav.Save(filePath, justFeedback);
+		filePath = Path.Combine (Application.persistentDataPath, "test.mp3");
+		AudioClip justFeedback = saveWav.TrimSilence (myAudio.clip, 0.01f);
+
+		EncodeMP3.convert(justFeedback, filePath, 128);
+
 		if (filePath != null) {
 			Debug.Log ("Will upload from: " + filePath);
 			StartCoroutine(UploadToServer ());

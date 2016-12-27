@@ -17,14 +17,14 @@ public class SavWav
 
     }
 
-    public string Save(string filename, AudioClip clip)
+	public string Save(string filepath, AudioClip clip)
     {
-        if (!filename.ToLower().EndsWith(".wav"))
+		if (!filepath.ToLower().EndsWith(".wav"))
         {
-            filename += ".wav";
+			filepath += ".wav";
         }
 
-		var filepath = Path.Combine("/", filename); //Application.persistentDataPath
+        //var filepath = Path.Combine(Application.persistentDataPath, filename);
 
         Debug.Log(filepath);
 
@@ -132,6 +132,8 @@ public class SavWav
         var hz = clip.frequency;
         var channels = clip.channels;
         var samples = clip.samples;
+
+		Debug.Log ("number of channels" + channels);
 
         fileStream.Seek(0, SeekOrigin.Begin);
 
