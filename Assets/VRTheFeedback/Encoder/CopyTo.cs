@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-			public static partial class Extensions
+			public static partial class VRTheFeedbackExtensions
 			{
 				public static void CopyTo(this Stream source, Stream target)
 				{

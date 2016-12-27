@@ -604,7 +604,7 @@ namespace NAudio.Lame.DLL
 
 		internal static class NativeMethods
 		{
-			const string libname = @"libmp3lame.dll";
+			const string libname = @"libmp3lame";
 
 			// typedef void (*lame_report_function)(const char *format, va_list ap);
 
@@ -626,7 +626,7 @@ namespace NAudio.Lame.DLL
 			 * final call to free all remaining buffers
 			 */
 			// int  CDECL lame_close (lame_global_flags *);
-			[DllImport("libmp3lame.dll", CallingConvention = CallingConvention.Cdecl)]
+			[DllImport(libname, CallingConvention = CallingConvention.Cdecl)]
 			internal static extern int lame_close(IntPtr context);
 
 			#endregion
