@@ -1,7 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.IO;
+using LitJson;
 using System.Net;
+
+public class PresignedResponseJSON
+{
+	public string url;
+}
 
 public class VRTheFeedbackManager : MonoBehaviour {
 
@@ -15,7 +21,7 @@ public class VRTheFeedbackManager : MonoBehaviour {
 	
     public void RecordFeedback()
     {
-        myAudio.clip = Microphone.Start(null, false, 120, 44100);
+        myAudio.clip = Microphone.Start(null, false, 10, 44100);
     }
 
     public void SaveFeedback()
@@ -24,10 +30,36 @@ public class VRTheFeedbackManager : MonoBehaviour {
 		if (filePath != null) {
 			
 			Debug.Log ("would upload from " + filePath);
-			UploadObject ("REPLACE_ME", filePath);
-			Debug.Log ("done");
+			StartCoroutine(UploadToServer (filePath));
 		}			
     }
+
+	public IEnumerator UploadToServer(string filepath) {
+		string url = "https://vrthefeedback.com/upload/presign";
+		Debug.Log ("ready to presign url");
+		WWW www = new WWW(url);
+		yield return www;
+		if (www.error == null)
+		{
+			Debug.Log ("will parse response" + www.data);
+			PresignedResponseJSON json = ParsePresignedResponseJSON(www.data);
+			UploadObject (json.url, filepath);
+		}
+		else
+		{
+			Debug.Log("ERROR: " + www.error);
+		}  
+
+	}
+
+	private PresignedResponseJSON ParsePresignedResponseJSON(string jsonString)
+	{
+		JsonData jsonvale = JsonMapper.ToObject(jsonString);
+		PresignedResponseJSON parsejson;
+		parsejson = new PresignedResponseJSON();
+		parsejson.url = jsonvale["url"].ToString();
+		return parsejson;
+	}
 
 	static void UploadObject(string url, string filePath)
 	{
@@ -47,6 +79,7 @@ public class VRTheFeedbackManager : MonoBehaviour {
 		}
 
 		HttpWebResponse response = httpRequest.GetResponse() as HttpWebResponse;
+		Debug.Log ("done uploading to " + url);
 	}
 
 }
