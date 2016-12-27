@@ -14,6 +14,10 @@ public class FeedbackMicController : MonoBehaviour {
     public AudioClip successClip;
     public AudioClip errorClip;
     public AudioClip confirmationClip;
+    public TextMesh infoText;
+
+    private bool canRecordFeedback = true;
+
     // Use this for initialization
     void Start () {
         interactable = GetComponent<VRTK.VRTK_InteractableObject>();
@@ -25,33 +29,44 @@ public class FeedbackMicController : MonoBehaviour {
 
     private void FeedbackManager_FeedbackFailedDueToError(object sender, VRTheFeedbackManager.VRTheFeedbackEventArgs e)
     {
+        infoText.text = "Something went wrong.\nPlease try again.";
         audioSource.clip = errorClip;
         audioSource.Play();
         GetComponent<Renderer>().material = readyMaterial;
+        canRecordFeedback = true;
     }
 
     private void FeedbackManager_FeedbackSuccessfullyUploaded(object sender, VRTheFeedbackManager.VRTheFeedbackEventArgs e)
     {
+        infoText.text = "Thank you!\nGrab again to record another message.";
         audioSource.clip = successClip;
         audioSource.Play();
         GetComponent<Renderer>().material = readyMaterial;
+        canRecordFeedback = true;
     }
 
     private void Interactable_InteractableObjectUngrabbed(object sender, VRTK.InteractableObjectEventArgs e)
     {
         Debug.Log("ungrabbed");
-        audioSource.clip = confirmationClip;
-        audioSource.Play();
-        GetComponent<Renderer>().material = workingMaterial;
-        feedbackManager.SaveFeedback();
+        if (canRecordFeedback) {
+            infoText.text = "Uploading feedback...";
+            canRecordFeedback = false;
+            audioSource.clip = confirmationClip;
+            audioSource.Play();
+            GetComponent<Renderer>().material = workingMaterial;
+            feedbackManager.SaveFeedback();
+        }
     }
 
     private void Interactable_InteractableObjectGrabbed(object sender, VRTK.InteractableObjectEventArgs e)
     {
         Debug.Log("grabbed");
-        audioSource.clip = openClip;
-        audioSource.Play();
-        GetComponent<Renderer>().material = recordingMaterial;
-        feedbackManager.RecordFeedback();
+        if (canRecordFeedback) {
+            infoText.text = "Speak now.\nRelease trigger to upload.";
+            audioSource.clip = openClip;
+            audioSource.Play();
+            GetComponent<Renderer>().material = recordingMaterial;
+            feedbackManager.RecordFeedback();
+        }
     }
 }
