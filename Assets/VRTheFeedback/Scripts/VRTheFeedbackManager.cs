@@ -86,7 +86,7 @@ public class VRTheFeedbackManager : MonoBehaviour {
 		}	
     }
 
-	public IEnumerator UploadToServer() {
+	private IEnumerator UploadToServer() {
 		string url = "https://www.vrthefeedback.com/upload/presign";
 		WWW www = new WWW(url);
 		yield return www;
@@ -106,7 +106,7 @@ public class VRTheFeedbackManager : MonoBehaviour {
 
 	}
 
-	public void FeedbackUploadThread() {
+    private void FeedbackUploadThread() {
 		_threadRunning = true;
 		Debug.Log("Starting upload on separate thread.");
 		EncodeMP3.convert(justFeedbackSamples, filePath, 128);
