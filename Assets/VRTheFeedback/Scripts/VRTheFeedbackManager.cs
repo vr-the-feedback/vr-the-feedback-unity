@@ -143,20 +143,36 @@ public class VRTheFeedbackManager : MonoBehaviour
         yield return www;
         if (www.error == null)
         {
-            Debug.Log("Server response on presign: " + www.data);
-            json = ParsePresignedResponseJSON(www.data);
-            justFeedbackSamples = new float[justFeedback.samples * justFeedback.channels];
-            justFeedback.GetData(justFeedbackSamples, 0);
-            _thread = new Thread(FeedbackUploadThread);
-            _thread.Start();
+            ParseResponseAndUploadToS3(www);
         }
         else
         {
-            Debug.Log("ERROR: " + www.error);
-            OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs());
+            Debug.Log("ERROR - will retry in 3s: " + www.error);
+            yield return new WaitForSeconds(3);
+            www = new WWW(url);
+            yield return www;
+            if (www.error == null)
+            {
+                ParseResponseAndUploadToS3(www);
+            } else
+            {
+                Debug.Log("ERROR - failed again...: " + www.error);
+                OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs());
+            }
         }
 
     }
+
+    private void ParseResponseAndUploadToS3(WWW www)
+    {
+        Debug.Log("Server response on presign: " + www.text);
+        json = ParsePresignedResponseJSON(www.text);
+        justFeedbackSamples = new float[justFeedback.samples * justFeedback.channels];
+        justFeedback.GetData(justFeedbackSamples, 0);
+        _thread = new Thread(FeedbackUploadThread);
+        _thread.Start();
+    }
+
 
     private void FeedbackUploadThread()
     {
