@@ -7,6 +7,7 @@ using System.Threading;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System;
+using System.Collections.Generic;
 
 public class PresignedResponseJSON
 {
@@ -15,6 +16,8 @@ public class PresignedResponseJSON
 
 public class VRTheFeedbackManager : MonoBehaviour
 {
+
+	public string PROJECT_KEY = "REPLACE_ME";
 
     public struct VRTheFeedbackEventArgs
     {
@@ -113,33 +116,47 @@ public class VRTheFeedbackManager : MonoBehaviour
 
     public void SaveFeedback()
     {
-        int lastTime = Microphone.GetPosition(null);
-        if (lastTime == 0) return;
-        Microphone.End(null);
-        float[] samples = new float[myAudio.clip.samples];
-        myAudio.clip.GetData(samples, 0);
-        float[] ClipSamples = new float[lastTime];
-        Array.Copy(samples, ClipSamples, ClipSamples.Length - 1);
-        AudioClip newClip = AudioClip.Create("playRecordClip", ClipSamples.Length, 1, 44100, false, false);
-        newClip.SetData(ClipSamples, 0);
-
-        AudioClip.Destroy(myAudio.clip);
-        myAudio.clip = newClip;
-
-        filePath = Path.Combine(Application.persistentDataPath, "test.mp3");
-        justFeedback = saveWav.TrimSilence(myAudio.clip, 0.001f);
-        //saveWav.Save(filePath + ".wav", justFeedback);
-
-        if (filePath != null)
-        {
-            StartCoroutine(UploadToServer());
-        }
+		SaveFeedback (new Dictionary<string, string> ());   
     }
 
-    private IEnumerator UploadToServer()
+	public void SaveFeedback(Dictionary<string, string> metadata) {
+		int lastTime = Microphone.GetPosition(null);
+		if (lastTime == 0) return;
+		Microphone.End(null);
+		float[] samples = new float[myAudio.clip.samples];
+		myAudio.clip.GetData(samples, 0);
+		float[] ClipSamples = new float[lastTime];
+		Array.Copy(samples, ClipSamples, ClipSamples.Length - 1);
+		AudioClip newClip = AudioClip.Create("playRecordClip", ClipSamples.Length, 1, 44100, false, false);
+		newClip.SetData(ClipSamples, 0);
+
+		AudioClip.Destroy(myAudio.clip);
+		myAudio.clip = newClip;
+
+		filePath = Path.Combine(Application.persistentDataPath, "test.mp3");
+		justFeedback = saveWav.TrimSilence(myAudio.clip, 0.001f);
+		//saveWav.Save(filePath + ".wav", justFeedback);
+
+		if (filePath != null)
+		{
+			StartCoroutine(UploadToServer(metadata));
+		}
+	}
+
+	private IEnumerator UploadToServer(Dictionary<string, string> metadata)
     {
         string url = "https://www.vrthefeedback.com/upload/presign";
-        WWW www = new WWW(url);
+
+		metadata.Add("game-play-time", Time.time.ToString());
+		metadata.Add("game-scene", Application.loadedLevelName);
+		metadata.Add("feedback-length", justFeedback.length.ToString());
+
+		string metadataJson = JsonMapper.ToJson(metadata);
+		string ourPostData = "{\"secret_key\": \""+ PROJECT_KEY +"\", \"metadata\": "+metadataJson+"}";
+		System.Collections.Generic.Dictionary<string, string> headers = new System.Collections.Generic.Dictionary<string, string>();
+		headers.Add("Content-Type", "application/json");
+		byte[] pData = System.Text.Encoding.ASCII.GetBytes(ourPostData.ToCharArray());
+		WWW www = new WWW(url, pData, headers);
         yield return www;
         if (www.error == null)
         {
@@ -149,7 +166,7 @@ public class VRTheFeedbackManager : MonoBehaviour
         {
             Debug.Log("ERROR - will retry in 3s: " + www.error);
             yield return new WaitForSeconds(3);
-            www = new WWW(url);
+			www = new WWW(url, pData, headers);
             yield return www;
             if (www.error == null)
             {
