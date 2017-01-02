@@ -5,6 +5,7 @@ public class FeedbackMicController : MonoBehaviour {
 
     VRTK.VRTK_InteractableObject interactable;
 
+    public FeedbackMetadataProvider feedbackMetadataProvider;
     public Material recordingMaterial;
     public Material workingMaterial;
     public Material readyMaterial;
@@ -54,7 +55,7 @@ public class FeedbackMicController : MonoBehaviour {
             audioSource.clip = confirmationClip;
             audioSource.Play();
             GetComponent<Renderer>().material = workingMaterial;
-            feedbackManager.SaveFeedback();
+            feedbackManager.SaveFeedback(feedbackMetadataProvider.GetFeedbackMetadata());
         }
     }
 
