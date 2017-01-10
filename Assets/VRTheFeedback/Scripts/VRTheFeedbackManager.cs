@@ -8,6 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class PresignedResponseJSON
 {
@@ -21,7 +22,7 @@ public class VRTheFeedbackManager : MonoBehaviour
 
     public struct VRTheFeedbackEventArgs
     {
-
+        public string message;
     }
 
     /// <summary>
@@ -46,6 +47,8 @@ public class VRTheFeedbackManager : MonoBehaviour
 
     public event VRTheFeedbackEventArgsEventHandler FeedbackSuccessfullyUploaded;
     public event VRTheFeedbackEventArgsEventHandler FeedbackFailedDueToError;
+
+    public bool isRecording = false;
 
     public virtual void OnFeedbackSuccessfullyUploaded(VRTheFeedbackEventArgs e)
     {
@@ -111,19 +114,21 @@ public class VRTheFeedbackManager : MonoBehaviour
 
     public void RecordFeedback()
     {
+        isRecording = true;
         myAudio.clip = Microphone.Start(null, false, 300, 44100);
     }
 
     public void SaveFeedback()
-    {
-		SaveFeedback (new Dictionary<string, string> ());   
+    {   
+        SaveFeedback (new Dictionary<string, string> ());   
     }
 
 	public void SaveFeedback(Dictionary<string, string> metadata) {
 		int lastTime = Microphone.GetPosition(null);
 		if (lastTime == 0) return;
 		Microphone.End(null);
-		float[] samples = new float[myAudio.clip.samples];
+        isRecording = false;
+        float[] samples = new float[myAudio.clip.samples];
 		myAudio.clip.GetData(samples, 0);
 		float[] ClipSamples = new float[lastTime];
 		Array.Copy(samples, ClipSamples, ClipSamples.Length - 1);
@@ -135,9 +140,14 @@ public class VRTheFeedbackManager : MonoBehaviour
 
 		filePath = Path.Combine(Application.persistentDataPath, "test.mp3");
 		justFeedback = saveWav.TrimSilence(myAudio.clip, 0.001f);
-		//saveWav.Save(filePath + ".wav", justFeedback);
+        if (justFeedback.length < 1)
+        {
+            OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs { message = "Feedback too short." });
+            return;
+        }
+        //saveWav.Save(filePath + ".wav", justFeedback);
 
-		if (filePath != null)
+        if (filePath != null)
 		{
 			StartCoroutine(UploadToServer(metadata));
 		}
@@ -148,7 +158,7 @@ public class VRTheFeedbackManager : MonoBehaviour
         string url = "https://www.vrthefeedback.com/upload/presign";
 
 		metadata.Add("game-play-time", Time.time.ToString());
-		metadata.Add("game-scene", Application.loadedLevelName);
+		metadata.Add("game-scene", SceneManager.GetActiveScene().name);
 		metadata.Add("feedback-length", justFeedback.length.ToString());
 
 		string metadataJson = JsonMapper.ToJson(metadata);

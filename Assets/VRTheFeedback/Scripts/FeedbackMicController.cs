@@ -16,8 +16,11 @@ public class FeedbackMicController : MonoBehaviour {
     public AudioClip errorClip;
     public AudioClip confirmationClip;
     public TextMesh infoText;
-
+    public float waitTimeForStartRecording = 4;
+    public bool isGrabbed = false;
     private bool canRecordFeedback = true;
+    private bool shouldUploadFeedback = false;
+    private float timeGrabbed;
 
     // Use this for initialization
     void Start () {
@@ -46,28 +49,50 @@ public class FeedbackMicController : MonoBehaviour {
         canRecordFeedback = true;
     }
 
+    public void Update()
+    {
+        if (isGrabbed && canRecordFeedback)
+        {
+            if (!feedbackManager.isRecording)
+            {
+                if (timeGrabbed + waitTimeForStartRecording < Time.time)
+                {
+                    infoText.text = "Speak now.\nRelease trigger to upload.";
+                    audioSource.clip = openClip;
+                    audioSource.Play();
+                    GetComponent<Renderer>().material = recordingMaterial;
+                    feedbackManager.RecordFeedback();
+                    shouldUploadFeedback = true;
+                    canRecordFeedback = false;
+                } else
+                {
+                    infoText.text = "Start speaking in " + (waitTimeForStartRecording + (timeGrabbed - Time.time)).ToString("0.00");
+                }
+                
+            }
+            
+        }
+    }
+
     private void Interactable_InteractableObjectUngrabbed(object sender, VRTK.InteractableObjectEventArgs e)
     {
-        Debug.Log("ungrabbed");
-        if (canRecordFeedback) {
+        isGrabbed = false;
+        if (shouldUploadFeedback) {
             infoText.text = "Uploading feedback...";
-            canRecordFeedback = false;
+            shouldUploadFeedback = false;
             audioSource.clip = confirmationClip;
             audioSource.Play();
             GetComponent<Renderer>().material = workingMaterial;
             feedbackManager.SaveFeedback(feedbackMetadataProvider.GetFeedbackMetadata());
+        } else
+        {
+            infoText.text = "Grab me to\nrecord voice feedback";
         }
     }
 
     private void Interactable_InteractableObjectGrabbed(object sender, VRTK.InteractableObjectEventArgs e)
     {
-        Debug.Log("grabbed");
-        if (canRecordFeedback) {
-            infoText.text = "Speak now.\nRelease trigger to upload.";
-            audioSource.clip = openClip;
-            audioSource.Play();
-            GetComponent<Renderer>().material = recordingMaterial;
-            feedbackManager.RecordFeedback();
-        }
+        isGrabbed = true;
+        timeGrabbed = Time.time;
     }
 }
