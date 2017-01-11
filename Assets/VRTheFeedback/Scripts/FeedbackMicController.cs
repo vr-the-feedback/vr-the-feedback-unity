@@ -21,6 +21,7 @@ public class FeedbackMicController : MonoBehaviour {
     private bool canRecordFeedback = true;
     private bool shouldUploadFeedback = false;
     private float timeGrabbed;
+    private float micRecordingTime;
 
     // Use this for initialization
     void Start () {
@@ -61,6 +62,7 @@ public class FeedbackMicController : MonoBehaviour {
                     audioSource.clip = openClip;
                     audioSource.Play();
                     GetComponent<Renderer>().material = recordingMaterial;
+                    micRecordingTime = Time.time;
                     feedbackManager.RecordFeedback();
                     shouldUploadFeedback = true;
                     canRecordFeedback = false;
@@ -68,9 +70,9 @@ public class FeedbackMicController : MonoBehaviour {
                 {
                     infoText.text = "Start speaking in " + (waitTimeForStartRecording + (timeGrabbed - Time.time)).ToString("0.00");
                 }
-                
+
             }
-            
+
         }
     }
 
@@ -83,7 +85,9 @@ public class FeedbackMicController : MonoBehaviour {
             audioSource.clip = confirmationClip;
             audioSource.Play();
             GetComponent<Renderer>().material = workingMaterial;
-            feedbackManager.SaveFeedback(feedbackMetadataProvider.GetFeedbackMetadata());
+            var metadata = feedbackMetadataProvider.GetFeedbackMetadata();
+            metadata.Add("mic-holding-time", (Time.time - micRecordingTime).ToString());
+            feedbackManager.SaveFeedback(metadata);
         } else
         {
             infoText.text = "Grab me to\nrecord voice feedback";
