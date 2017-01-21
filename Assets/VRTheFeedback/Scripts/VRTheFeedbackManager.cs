@@ -155,7 +155,16 @@ public class VRTheFeedbackManager : MonoBehaviour
 
 	private IEnumerator UploadToServer(Dictionary<string, string> metadata)
     {
-        string url = "https://www.vrthefeedback.com/upload/presign";
+		if (PROJECT_KEY == "REPLACE_ME" || PROJECT_KEY == "CHANGE_ME") {
+			Debug.Log ("You have to set a vaild PROJECT_KEY. Create account: http://www.vrthefeedback.com/");
+			Debug.Log ("Creating MP3 that normally would be uploaded to server.");
+			justFeedbackSamples = new float[justFeedback.samples * justFeedback.channels];
+			justFeedback.GetData(justFeedbackSamples, 0);
+			_thread = new Thread(Mp3Encoding);
+			_thread.Start();
+			return false;
+		}
+		string url = "https://www.vrthefeedback.com/upload/presign";
 
 		metadata.Add("game-play-time", Time.time.ToString());
 		metadata.Add("game-scene", SceneManager.GetActiveScene().name);
@@ -200,13 +209,16 @@ public class VRTheFeedbackManager : MonoBehaviour
         _thread.Start();
     }
 
+	private void Mp3Encoding() {
+		EncodeMP3.convert(justFeedbackSamples, filePath, 128);
+		Debug.Log("Find mp3 file under: " + filePath);
+	}
 
     private void FeedbackUploadThread()
     {
         _threadRunning = true;
         Debug.Log("Starting upload on separate thread.");
-        EncodeMP3.convert(justFeedbackSamples, filePath, 128);
-        Debug.Log("Find mp3 file under: " + filePath);
+		Mp3Encoding();
         UploadObject(json.url, filePath);
         justFeedbackSamples = null;
         justFeedback = null;
