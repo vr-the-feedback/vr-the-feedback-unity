@@ -1,6 +1,6 @@
-# VR The Feedback.
+# VR The Feedback - HTC Vive.
 
-Virtual Reality Voice Feedback Plugin for Unity.
+Virtual Reality Voice Feedback Plugin for Unity & SteamVR.
 
 Learn more: http://www.vrthefeedback.com/ and https://twitter.com/vrthefeedback
 
