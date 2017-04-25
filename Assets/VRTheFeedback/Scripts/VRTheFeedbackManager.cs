@@ -156,47 +156,48 @@ public class VRTheFeedbackManager : MonoBehaviour
 	private IEnumerator UploadToServer(Dictionary<string, string> metadata)
     {
 		if (PROJECT_KEY == "REPLACE_ME" || PROJECT_KEY == "CHANGE_ME") {
-			Debug.Log ("You have to set a vaild PROJECT_KEY. Create account: http://www.vrthefeedback.com/");
+			Debug.LogError ("You have to set a vaild PROJECT_KEY. Create account: http://www.vrthefeedback.com/");
 			Debug.Log ("Creating MP3 that normally would be uploaded to server.");
 			justFeedbackSamples = new float[justFeedback.samples * justFeedback.channels];
 			justFeedback.GetData(justFeedbackSamples, 0);
 			_thread = new Thread(Mp3Encoding);
 			_thread.Start();
-			return false;
-		}
-		string url = "https://www.vrthefeedback.com/upload/presign";
+            OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs { message = "Please provide PROJECT_KEY.." });
+            yield return false;
+		} else { 
+		    string url = "https://www.vrthefeedback.com/upload/presign";
 
-		metadata.Add("game-play-time", Time.time.ToString());
-		metadata.Add("game-scene", SceneManager.GetActiveScene().name);
-		metadata.Add("feedback-length", justFeedback.length.ToString());
+		    metadata.Add("game-play-time", Time.time.ToString());
+		    metadata.Add("game-scene", SceneManager.GetActiveScene().name);
+		    metadata.Add("feedback-length", justFeedback.length.ToString());
 
-		string metadataJson = JsonMapper.ToJson(metadata);
-		string ourPostData = "{\"secret_key\": \""+ PROJECT_KEY +"\", \"metadata\": "+metadataJson+"}";
-		System.Collections.Generic.Dictionary<string, string> headers = new System.Collections.Generic.Dictionary<string, string>();
-		headers.Add("Content-Type", "application/json");
-		byte[] pData = System.Text.Encoding.ASCII.GetBytes(ourPostData.ToCharArray());
-		WWW www = new WWW(url, pData, headers);
-        yield return www;
-        if (www.error == null)
-        {
-            ParseResponseAndUploadToS3(www);
-        }
-        else
-        {
-            Debug.Log("ERROR - will retry in 3s: " + www.error);
-            yield return new WaitForSeconds(3);
-			www = new WWW(url, pData, headers);
+		    string metadataJson = JsonMapper.ToJson(metadata);
+		    string ourPostData = "{\"secret_key\": \""+ PROJECT_KEY +"\", \"metadata\": "+metadataJson+"}";
+		    System.Collections.Generic.Dictionary<string, string> headers = new System.Collections.Generic.Dictionary<string, string>();
+		    headers.Add("Content-Type", "application/json");
+		    byte[] pData = System.Text.Encoding.ASCII.GetBytes(ourPostData.ToCharArray());
+		    WWW www = new WWW(url, pData, headers);
             yield return www;
             if (www.error == null)
             {
                 ParseResponseAndUploadToS3(www);
-            } else
+            }
+            else
             {
-                Debug.Log("ERROR - failed again...: " + www.error);
-                OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs());
+                Debug.Log("ERROR - will retry in 3s: " + www.error);
+                yield return new WaitForSeconds(3);
+			    www = new WWW(url, pData, headers);
+                yield return www;
+                if (www.error == null)
+                {
+                    ParseResponseAndUploadToS3(www);
+                } else
+                {
+                    Debug.Log("ERROR - failed again...: " + www.error);
+                    OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs());
+                }
             }
         }
-
     }
 
     private void ParseResponseAndUploadToS3(WWW www)

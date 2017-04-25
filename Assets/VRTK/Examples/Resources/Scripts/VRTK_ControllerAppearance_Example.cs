@@ -26,8 +26,14 @@
             events.TriggerPressed += new ControllerInteractionEventHandler(DoTriggerPressed);
             events.TriggerReleased += new ControllerInteractionEventHandler(DoTriggerReleased);
 
-            events.ApplicationMenuPressed += new ControllerInteractionEventHandler(DoApplicationMenuPressed);
-            events.ApplicationMenuReleased += new ControllerInteractionEventHandler(DoApplicationMenuReleased);
+            events.ButtonOnePressed += new ControllerInteractionEventHandler(DoButtonOnePressed);
+            events.ButtonOneReleased += new ControllerInteractionEventHandler(DoButtonOneReleased);
+
+            events.ButtonTwoPressed += new ControllerInteractionEventHandler(DoButtonTwoPressed);
+            events.ButtonTwoReleased += new ControllerInteractionEventHandler(DoButtonTwoReleased);
+
+            events.StartMenuPressed += new ControllerInteractionEventHandler(DoStartMenuPressed);
+            events.StartMenuReleased += new ControllerInteractionEventHandler(DoStartMenuReleased);
 
             events.GripPressed += new ControllerInteractionEventHandler(DoGripPressed);
             events.GripReleased += new ControllerInteractionEventHandler(DoGripReleased);
@@ -55,17 +61,51 @@
             }
         }
 
-        private void DoApplicationMenuPressed(object sender, ControllerInteractionEventArgs e)
+        private void DoButtonOnePressed(object sender, ControllerInteractionEventArgs e)
         {
-            tooltips.ToggleTips(true, VRTK_ControllerTooltips.TooltipButtons.AppMenuTooltip);
-            actions.ToggleHighlightApplicationMenu(true, Color.yellow, 0.5f);
+            tooltips.ToggleTips(true, VRTK_ControllerTooltips.TooltipButtons.ButtonOneTooltip);
+            actions.ToggleHighlightButtonOne(true, Color.yellow, 0.5f);
             actions.SetControllerOpacity(0.8f);
         }
 
-        private void DoApplicationMenuReleased(object sender, ControllerInteractionEventArgs e)
+        private void DoButtonOneReleased(object sender, ControllerInteractionEventArgs e)
         {
-            tooltips.ToggleTips(false, VRTK_ControllerTooltips.TooltipButtons.AppMenuTooltip);
-            actions.ToggleHighlightApplicationMenu(false);
+            tooltips.ToggleTips(false, VRTK_ControllerTooltips.TooltipButtons.ButtonOneTooltip);
+            actions.ToggleHighlightButtonOne(false);
+            if (!events.AnyButtonPressed())
+            {
+                actions.SetControllerOpacity(1f);
+            }
+        }
+
+        private void DoButtonTwoPressed(object sender, ControllerInteractionEventArgs e)
+        {
+            tooltips.ToggleTips(true, VRTK_ControllerTooltips.TooltipButtons.ButtonTwoTooltip);
+            actions.ToggleHighlightButtonTwo(true, Color.yellow, 0.5f);
+            actions.SetControllerOpacity(0.8f);
+        }
+
+        private void DoButtonTwoReleased(object sender, ControllerInteractionEventArgs e)
+        {
+            tooltips.ToggleTips(false, VRTK_ControllerTooltips.TooltipButtons.ButtonTwoTooltip);
+            actions.ToggleHighlightButtonTwo(false);
+            if (!events.AnyButtonPressed())
+            {
+                actions.SetControllerOpacity(1f);
+            }
+        }
+
+        private void DoStartMenuPressed(object sender, ControllerInteractionEventArgs e)
+        {
+            tooltips.ToggleTips(true, VRTK_ControllerTooltips.TooltipButtons.StartMenuTooltip);
+            actions.ToggleHighlightStartMenu(true, Color.yellow, 0.5f);
+            actions.SetControllerOpacity(0.8f);
+        }
+
+        private void DoStartMenuReleased(object sender, ControllerInteractionEventArgs e)
+        {
+            tooltips.ToggleTips(false, VRTK_ControllerTooltips.TooltipButtons.StartMenuTooltip);
+            actions.ToggleHighlightStartMenu(false);
             if (!events.AnyButtonPressed())
             {
                 actions.SetControllerOpacity(1f);
@@ -108,25 +148,31 @@
 
         private void OnTriggerEnter(Collider collider)
         {
-            if (highlightBodyOnlyOnCollision)
+            if (!VRTK_PlayerObject.IsPlayerObject(collider.gameObject))
             {
-                actions.ToggleHighlighBody(true, Color.yellow, 0.4f);
-            }
-            else
-            {
-                actions.ToggleHighlightController(true, Color.yellow, 0.4f);
+                if (highlightBodyOnlyOnCollision)
+                {
+                    actions.ToggleHighlighBody(true, Color.yellow, 0.4f);
+                }
+                else
+                {
+                    actions.ToggleHighlightController(true, Color.yellow, 0.4f);
+                }
             }
         }
 
         private void OnTriggerExit(Collider collider)
         {
-            if (highlightBodyOnlyOnCollision)
+            if (!VRTK_PlayerObject.IsPlayerObject(collider.gameObject))
             {
-                actions.ToggleHighlighBody(false);
-            }
-            else
-            {
-                actions.ToggleHighlightController(false);
+                if (highlightBodyOnlyOnCollision)
+                {
+                    actions.ToggleHighlighBody(false);
+                }
+                else
+                {
+                    actions.ToggleHighlightController(false);
+                }
             }
         }
     }

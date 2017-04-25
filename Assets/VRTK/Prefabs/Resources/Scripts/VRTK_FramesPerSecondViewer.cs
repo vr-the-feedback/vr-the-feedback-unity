@@ -10,7 +10,7 @@ namespace VRTK
     /// <remarks>
     ///   * Select `FramesPerSecondCanvas` object from the scene objects
     ///   * Find the `Canvas` component
-    ///   * Set the `Render Camera` parameter to `Camera(eye)` which can be found in the `[CameraRig]` prefab.
+    ///   * Set the `Render Camera` parameter to the camera used by the VR Headset (e.g. SteamVR: [CameraRig]-> Camera(Head) -> Camera(eye)])
     ///
     /// This script is pretty much a copy and paste from the script at: http://talesfromtherift.com/vr-fps-counter/ So all credit to Peter Koch for his work. Twitter: @peterept
     /// </remarks>
@@ -39,14 +39,15 @@ namespace VRTK
         private float framesTime;
         private Text text;
 
-        private void Start()
+        protected virtual void Start()
         {
+            transform.parent.GetComponent<Canvas>().planeDistance = 0.5f;
             text = GetComponent<Text>();
             text.fontSize = fontSize;
             text.transform.localPosition = position;
         }
 
-        private void Update()
+        protected virtual void Update()
         {
             framesCount++;
             framesTime += Time.unscaledDeltaTime;

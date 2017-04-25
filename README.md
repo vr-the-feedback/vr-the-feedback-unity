@@ -12,7 +12,8 @@ Testing: Open ./Assets/VRTheFeedback/Scenes/Demo2DUI.unity in Unity. Enter "Play
 
 ## Installation
 
-* Download vr-the-feedback-0.1.unitypackage
-* Import in Unity (requires SteamVR and VRTK for VR scene to work.)
+* Download vr-the-feedback-0.2.unitypackage
+* Import in Unity (requires SteamVR 1.2.1 and VRTK 3.1.0 for VR scene to work.)
 * Drag prefabs into the scene: VRTheFeedbackManager, GrabbableMic
 * Configure PROJECT_KEY on VRTheFeedbackManager.
+* Set VRTheFeedbackManager on GrabbableMic.
