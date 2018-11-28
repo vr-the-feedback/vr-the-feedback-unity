@@ -139,7 +139,7 @@ public class VRTheFeedbackManager : MonoBehaviour
 		myAudio.clip = newClip;
 
 		filePath = Path.Combine(Application.persistentDataPath, "test.mp3");
-		justFeedback = saveWav.TrimSilence(myAudio.clip, 0.001f);
+		justFeedback = saveWav.TrimSilence(myAudio.clip, 0.0005f);
         if (justFeedback.length < 1)
         {
             OnFeedbackFailedDueToError(new VRTheFeedbackEventArgs { message = "Feedback too short." });

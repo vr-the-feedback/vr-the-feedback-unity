@@ -83,8 +83,12 @@ public class SavWav
             }
         }
 
-		//i = Mathf.Min (samples.Count - 1, i + 100);
 
+        if (i < samples.Count - 5002)
+        {
+            i = i + 5001;
+        }
+        
         samples.RemoveRange(i, samples.Count - i);
 
         var clip = AudioClip.Create("TempClip", samples.Count, channels, hz, _3D, stream);
