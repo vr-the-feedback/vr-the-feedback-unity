@@ -98,5 +98,9 @@ public class FeedbackMicController : MonoBehaviour {
     {
         isGrabbed = true;
         timeGrabbed = Time.time;
+        if (!PermissionHelper.CheckForPermission(PermissionHelper.Permissions.RECORD_AUDIO))
+        {
+            PermissionHelper.RequestPermission(PermissionHelper.Permissions.RECORD_AUDIO);
+        }
     }
 }
